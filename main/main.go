@@ -37,6 +37,7 @@ func program(delay time.Duration, size int) {
 
 	// The walker programs
 	pg := func(w *walker.Walker) {
+		//w.TriTriangle(40)
 		w.Panic()
 		// nice without radian calc
 		//w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
