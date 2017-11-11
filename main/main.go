@@ -37,7 +37,9 @@ func program(delay time.Duration, size int) {
 
 	// The walker programs
 	pg := func(w *walker.Walker) {
-		w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
+		w.Panic()
+		// nice without radian calc
+		//w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
 	}
 
 	sc.Spawn(walker.WalkerProgram(float64(size/2), float64(size/2), 0, pg))
