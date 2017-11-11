@@ -16,7 +16,8 @@ import (
 
 // Pixel represents a pixel by its coordinates.
 type Pixel struct {
-	X, Y float64
+	X, Y  float64
+	Color color.Color
 }
 
 // Painter is a channel for Pixels.
@@ -65,9 +66,9 @@ func (s *Screen) SpawnPainter(delay time.Duration) {
 		s.window.FlushImage()
 	})*/
 	go func() {
-		for v := range s.painter {
+		for p := range s.painter {
 			im := s.window.Screen()
-			im.Set(round(v.X), round(v.Y), color.White)
+			im.Set(round(p.X), round(p.Y), p.Color)
 			time.Sleep(time.Millisecond * delay)
 			s.window.FlushImage()
 		}
