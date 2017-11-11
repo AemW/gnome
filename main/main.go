@@ -37,39 +37,15 @@ func program(delay time.Duration, size int) {
 
 	// The walker programs
 	pg := func(w *walker.Walker) {
-		w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
+		w.Panic()
+		// nice without radian calc
+		//w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
 	}
 
-	sc.Spawn(walker.WalkerProgram(float64(size/2), float64(size/2), 0, pg))
+	sc.Spawn(walker.Program(float64(size/2), float64(size/2), 0, pg))
 	//sc.Spawn(walker.WalkerProgram(float64(size/2), float64(size/2), 120, pg))
 	//sc.Spawn(walker.WalkerProgram(float64(size/2), float64(size/2), 240, pg))
-	/*
-	   p.Spawn(func(){
-	       //w.Panic()
-	       w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
-	   })
 
-	   p.Spawn(func(){
-	       //w.Panic()
-	       w.Right(120).Walk(10).Right(90).Walk(10).Right(45).Walk(10)
-	   })
-
-	   p.Spawn(func(){
-	       //w.Panic()
-	       w.Right(240).Walk(10).Right(90).Walk(10).Right(45).Walk(10)
-	   })
-	   /*
-	   go func () {
-	       for {
-	           select {
-	           default:
-	               w.Panic()
-	           case <-stop:
-	               return
-	           }
-	       }
-	   }()
-	*/
 	<-done
 	sc.Stop()
 	fmt.Println("screen stopped")

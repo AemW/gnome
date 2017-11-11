@@ -10,66 +10,82 @@ import (
 	"github.com/AemW/gnome/process"
 	"github.com/skelterjohn/go.wde"
 
-	// Import necessary for graphical backend
+	// Import necessary for graphical backend.
 	_ "github.com/skelterjohn/go.wde/xgb"
 )
 
-// Pixel represents a pixel by its coordinates
+// Pixel represents a pixel by its coordinates.
 type Pixel struct {
 	X, Y float64
 }
 
+// Painter is a channel for Pixels.
 type Painter chan Pixel
 
+// Screen represents the current screen and the routines that modify it.
 type Screen struct {
 	window    wde.Window
 	processes process.Proc
 	painter   Painter
 }
 
+// Program is a function which given a Painter returns a function that when
+// executed sends Pixels through the Painter channel.
 type Program func(Painter) func()
 
+// Init 'runs' the graphical backend (has to run in the main routine).
 func Init() {
 	wde.Run()
 }
 
-func Make(x_size, y_size int, title string) Screen {
+// Make creates a new Screen of size "xSize * ySize" and 'title'
+// as window title.
+func Make(xSize, ySize int, title string) Screen {
 	// Window instantiation
 	// TODO error?
-	dw, err := wde.NewWindow(x_size, y_size)
+	dw, err := wde.NewWindow(xSize, ySize)
 	if err != nil {
 		//fmt.Println(err)
 		panic(err)
 	}
 	dw.SetTitle("Title!")
-	dw.SetSize(x_size, y_size)
+	dw.SetSize(xSize, ySize)
 	dw.Show()
 	return Screen{dw, process.Make(), make(Painter)}
 }
 
+// SpawnPainter spawns a new goroutine which listens to the Screen's
+// Painter channel and renders every received Pixel with a 'delay' ms delay.
 func (s *Screen) SpawnPainter(delay time.Duration) {
-	s.processes.SpawnNamed("Painter", func() {
-		select {
-		case v := <-s.painter:
+	/*s.processes.SpawnNamed("Painter", func() {
+		v := <-s.painter
+		im := s.window.Screen()
+		im.Set(round(v.X), round(v.Y), color.White)
+		time.Sleep(time.Millisecond * delay)
+		s.window.FlushImage()
+	})*/
+	go func() {
+		for v := range s.painter {
 			im := s.window.Screen()
 			im.Set(round(v.X), round(v.Y), color.White)
 			time.Sleep(time.Millisecond * delay)
 			s.window.FlushImage()
-		default:
-			// Nothing
 		}
-
-	})
+	}()
 }
 
+// Spawn start a new goroutine which repeatedly executes the 'prog' Program
 func (s *Screen) Spawn(prog Program) {
 	s.processes.SpawnNamed("Program", prog(s.painter))
 }
 
+// Stop sends a stop signal to all started routines and closes both the Painter
+// channel and the graphical backend.
 func (s *Screen) Stop() {
 	//s.processes.Enumerate()
 	s.processes.Stop()
 	close(s.painter)
+	s.window.Close()
 	wde.Stop()
 }
 
@@ -80,6 +96,7 @@ func round(f float64) int {
 	return int(math.Floor(f + 0.5))
 }
 
+// StartEventhandler starts a listener for keyboard and mouse events.
 func (s *Screen) StartEventhandler(done chan bool) {
 	go func(dw wde.Window) {
 		events := dw.EventChan()
@@ -118,12 +135,12 @@ func (s *Screen) StartEventhandler(done chan bool) {
 				case "3":
 					dw.SetCursor(wde.GrabHoverCursor)
 				case "4":
-					dw.Close()
+					//dw.Close()
 					break loop
 				}
 			case wde.CloseEvent:
 				fmt.Println("close")
-				dw.Close()
+				//dw.Close()
 				break loop
 			case wde.ResizeEvent:
 				fmt.Println("resize", e.Width, e.Height)
