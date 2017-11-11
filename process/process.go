@@ -14,6 +14,8 @@ func Make() Proc {
 	return Proc{make(map[int](chan int)), 0}
 }
 
+// TODO This type of setup disallows looping 'f'
+// TODO change Program type to give more controll to caller?
 func start(stop chan int, name interface{}, f func()) {
 	go func() {
 		for {
