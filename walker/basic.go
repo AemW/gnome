@@ -12,6 +12,7 @@ import (
 type Walker struct {
 	x, y, a float64
 	c       color.Color
+	alive   bool
 	painter chan screen.Pixel
 }
 
@@ -21,7 +22,7 @@ type Walker struct {
 // a channel 'painter'.
 func AriseAt(x, y, a float64, painter screen.Painter) Walker {
 	//painter <- Pixel{x, y}
-	return Walker{x, y, a, color.White, painter}
+	return Walker{x, y, a, color.White, true, painter}
 }
 
 // Arise creates a new Walker at point {0, 0} with an initial angle 0 and
@@ -60,6 +61,12 @@ func (w *Walker) Left(angle float64) *Walker {
 	return w.Right(-angle)
 }
 
+// Die "kills" the walker, rendering it immobile.
+func (w *Walker) Die() *Walker {
+	w.alive = false
+	return w
+}
+
 /*
 //var colors = map[string]int{"white": 0, "red": 1, "blue": 2, "green": 3}
 
@@ -74,7 +81,9 @@ func GetColor(name string) color.Color {
 
 // ChangeColor changes the color of  the walkers trace
 func (w *Walker) ChangeColor(c color.Color) *Walker {
-	w.c = c
+	if w.alive {
+		w.c = c
+	}
 	return w
 }
 
@@ -93,9 +102,11 @@ const radsPerCircle = math.Pi * 2
 
 // Modify the state of the walker
 func (w *Walker) modState(x, y, a float64) *Walker {
-	w.x += x
-	w.y += y
-	w.a = math.Remainder(w.a+a, radsPerCircle)
-	w.painter <- screen.Pixel{X: w.x, Y: w.y, Color: w.c}
+	if w.alive {
+		w.x += x
+		w.y += y
+		w.a = math.Remainder(w.a+a, radsPerCircle)
+		w.painter <- screen.Pixel{X: w.x, Y: w.y, Color: w.c}
+	}
 	return w
 }
