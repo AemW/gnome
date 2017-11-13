@@ -9,6 +9,8 @@ type Proc struct {
 	i  int
 }
 
+type Signal chan int
+
 // Make creates a new Proc.
 func Make() Proc {
 	return Proc{make(map[int](chan int)), 0}
@@ -16,28 +18,32 @@ func Make() Proc {
 
 // TODO This type of setup disallows looping 'f'
 // TODO change Program type to give more controll to caller?
-func start(stop chan int, name interface{}, f func()) {
+func start(s Signal, name interface{}, f func(Signal)) {
 	go func() {
-		for {
-			select {
-			default:
-				f()
-			case i := <-stop:
-				fmt.Println("Stoping process: ", name, " ", i)
-				close(stop)
-				return
-			}
-		}
+		f(s)
+		fmt.Println("Stoping process: ", name)
+		close(s)
+		/*
+			for {
+				select {
+				default:
+					f()
+				case i := <-stop:
+					fmt.Println("Stoping process: ", name, " ", i)
+					close(stop)
+					return
+				}
+			}*/
 	}()
 }
 
 // Spawn creates a new routine running function 'f'.
-func (p *Proc) Spawn(f func()) {
+func (p *Proc) Spawn(f func(Signal)) {
 	p.SpawnNamed(p.i, f)
 }
 
 // SpawnNamed creates a new routine named 'name' running function 'f'.
-func (p *Proc) SpawnNamed(name interface{}, f func()) {
+func (p *Proc) SpawnNamed(name interface{}, f func(Signal)) {
 	c := make(chan int)
 	p.ps[p.i] = c
 	start(c, name, f)

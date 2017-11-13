@@ -37,13 +37,18 @@ func program(delay time.Duration, size int) {
 
 	// The walker programs
 	pg := func(w *walker.Walker) {
+		w.ShapeImpl(10, 15, w.Reset(func() {
+			w.Right(180).RandomColor().Circle(10)
+		}))
+		w.Die()
 		//w.TriTriangle(40)
-		w.Panic()
+		//w.Panic()
 		// nice without radian calc
 		//w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
 	}
 
 	sc.Spawn(walker.Program(float64(size/2), float64(size/2), 0, pg))
+	//sc.Spawn(walker.Program(float64(size/4), float64(size/4), 0, pg))
 	//sc.Spawn(walker.WalkerProgram(float64(size/2), float64(size/2), 120, pg))
 	//sc.Spawn(walker.WalkerProgram(float64(size/2), float64(size/2), 240, pg))
 

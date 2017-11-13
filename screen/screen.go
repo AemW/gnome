@@ -32,7 +32,7 @@ type Screen struct {
 
 // Program is a function which given a Painter returns a function that when
 // executed sends Pixels through the Painter channel.
-type Program func(Painter) func()
+type Program func(Painter, process.Signal) func()
 
 // Init 'runs' the graphical backend (has to run in the main routine).
 func Init() {
@@ -77,7 +77,7 @@ func (s *Screen) SpawnPainter(delay time.Duration) {
 
 // Spawn start a new goroutine which repeatedly executes the 'prog' Program
 func (s *Screen) Spawn(prog Program) {
-	s.processes.SpawnNamed("Program", prog(s.painter))
+	s.processes.SpawnNamed("Program", func(sign process.Signal) { prog(s.painter, sign) })
 }
 
 // Stop sends a stop signal to all started routines and closes both the Painter
