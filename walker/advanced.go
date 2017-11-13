@@ -39,24 +39,29 @@ func (w *Walker) Panic() {
 	}
 }
 
-const granularity = 20
+// Randomcolor changes the color of the walker's trace randomly
+func (w *Walker) RandomColor() *Walker {
+	return w.ChangeColor(palette.Plan9[rand.Intn(pSize)])
+}
 
 //////////////////////////////////// Shapes ////////////////////////////////////
+
+const granularity = 20
 
 // Circle has the walker move around in a circle with radius 'radius'.
 func (w *Walker) Circle(radius float64) *Walker {
 	stepLen := (2 * math.Pi * radius) / float64(granularity)
-	return w.shape(granularity, stepLen)
+	return w.Shape(granularity, stepLen)
 }
 
 // Square has the walker move around in a square with side length 'sideLen'.
 func (w *Walker) Square(sideLen float64) *Walker {
-	return w.shape(4, sideLen)
+	return w.Shape(4, sideLen)
 }
 
 // Triangle has the walker move around in a triangle with side length 'sideLen'.
 func (w *Walker) Triangle(sideLen float64) *Walker {
-	return w.shape(3, sideLen)
+	return w.Shape(3, sideLen)
 }
 
 /*
@@ -70,7 +75,7 @@ func (w *Walker) TriTriangle(sideLen float64) *Walker {
 }
 */
 
-func (w *Walker) shapeImpl(sides int, stepLen float64, f func()) *Walker {
+func (w *Walker) ShapeImpl(sides int, stepLen float64, f func()) *Walker {
 	angle := float64(360 / sides) //180 - float64(((sides-2)*180)/sides)
 	turn := func() {
 		w.Right(angle)
@@ -80,6 +85,6 @@ func (w *Walker) shapeImpl(sides int, stepLen float64, f func()) *Walker {
 	return w.Repeat(sides, turn)
 }
 
-func (w *Walker) shape(sides int, stepLen float64) *Walker {
-	return w.shapeImpl(sides, stepLen, func() { /* Nothing */ })
+func (w *Walker) Shape(sides int, stepLen float64) *Walker {
+	return w.ShapeImpl(sides, stepLen, func() { /* Nothing */ })
 }

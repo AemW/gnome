@@ -67,6 +67,18 @@ func (w *Walker) Die() *Walker {
 	return w
 }
 
+func (w *Walker) Reset(f func()) func() {
+	return func() {
+		v := *w
+		f()
+		w.a = v.a
+		w.x = v.x
+		w.y = v.y
+		w.c = v.c
+		w.alive = v.alive
+	}
+}
+
 /*
 //var colors = map[string]int{"white": 0, "red": 1, "blue": 2, "green": 3}
 
@@ -85,6 +97,16 @@ func (w *Walker) ChangeColor(c color.Color) *Walker {
 		w.c = c
 	}
 	return w
+}
+
+// Invisible turns the walker's trace transparent
+func (w *Walker) Invisible() *Walker {
+	return w.ChangeColor(color.Transparent)
+}
+
+// Visible turns the walker's trace white
+func (w *Walker) Visible() *Walker {
+	return w.ChangeColor(color.White)
 }
 
 // Repeat repeats function 'f' 'i' times.
