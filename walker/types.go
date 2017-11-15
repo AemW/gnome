@@ -1,11 +1,20 @@
 package walker
 
 import (
+	"fmt"
 	"image/color"
 	"math"
 
 	"github.com/AemW/gnome/screen"
 )
+
+type Hive struct {
+	net HiveNet
+}
+
+type Command func(W *Walker)
+type Link chan Command
+type HiveNet []Link
 
 // Walker represents an entiry which "walks" around the plane, sending
 // it's coordinates through a channel during each step.
@@ -13,31 +22,57 @@ type Walker struct {
 	x, y, a float64
 	c       color.Color
 	alive   bool
-	painter chan screen.Pixel
+	painter screen.Painter
+	hivenet Link
 }
 
 /////////////////////////////////// Creation ///////////////////////////////////
 
+func MakeHive() Hive {
+	return Hive{make(HiveNet, 0, 10)}
+}
+
 // AriseAt creates a new Walker at point {'x', 'y'} with an initial angle 'a' and
 // a channel 'painter'.
-func AriseAt(x, y, a float64, painter screen.Painter) Walker {
+func (h *Hive) AriseAt(x, y, a float64, painter screen.Painter) Walker {
 	//painter <- Pixel{x, y}
-	return Walker{x, y, a, color.White, true, painter}
+	link := make(Link)
+	h.add(link)
+	return Walker{x, y, a, color.White, true, painter, link}
 }
 
 // Arise creates a new Walker at point {0, 0} with an initial angle 0 and
 // a channel 'painter'.
-func Arise(painter screen.Painter) Walker {
-	return AriseAt(0, 0, 0, painter)
+func (h *Hive) Arise(painter screen.Painter) Walker {
+	return h.AriseAt(0, 0, 0, painter)
 }
 
-// Program creates a Program from a new Walker created at point {'x', 'y'}
+// Scheme creates a Scheme from a new Walker created at point {'x', 'y'}
 // with an initial  angle 'a', a channel 'painter', and a function
 // which modifies the walker.
-func Program(x, y, a float64, f func(*Walker)) screen.Program {
+func (h *Hive) Scheme(x, y, a float64, f func(*Walker)) screen.Program {
 	return func(painter screen.Painter) func() {
-		w := AriseAt(x, y, a, painter)
+		w := h.AriseAt(x, y, a, painter)
 		return (func() { f(&w) })
+	}
+}
+
+/////////////////////////////////// Commands ///////////////////////////////////
+
+func (h *Hive) Stop() {
+	h.send1(func(w *Walker) { w.Die() })
+}
+
+func (h *Hive) SayHello() {
+	h.send(func() { fmt.Println("Hellloooozzz") })
+}
+
+func (h *Hive) send(f func()) {
+	h.send1(func(w *Walker) { f() })
+}
+func (h *Hive) send1(f func(w *Walker)) {
+	for _, n := range h.net {
+		n <- f
 	}
 }
 
@@ -48,6 +83,7 @@ const radsPerCircle = math.Pi * 2
 
 // Modify the state of the walker
 func (w *Walker) modState(x, y, a float64) *Walker {
+	w.listen()
 	if w.alive {
 		w.x += x
 		w.y += y
@@ -55,4 +91,16 @@ func (w *Walker) modState(x, y, a float64) *Walker {
 		w.painter <- screen.Pixel{X: w.x, Y: w.y, Color: w.c}
 	}
 	return w
+}
+
+func (w *Walker) listen() {
+	select {
+	case f := <-w.hivenet:
+		f(w)
+	default:
+	}
+}
+
+func (h *Hive) add(l Link) {
+	h.net = append(h.net, l)
 }

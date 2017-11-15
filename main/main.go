@@ -35,6 +35,8 @@ func program(delay time.Duration, size int) {
 	// Painter
 	sc.SpawnPainter(delay)
 
+	h := walker.MakeHive()
+
 	// The walker programs
 	pg := func(w *walker.Walker) {
 		//w.TriTriangle(40)
@@ -43,11 +45,13 @@ func program(delay time.Duration, size int) {
 		//w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
 	}
 
-	sc.Spawn(walker.Program(float64(size/2), float64(size/2), 0, pg))
-	//sc.Spawn(walker.WalkerProgram(float64(size/2), float64(size/2), 120, pg))
+	sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 0, pg))
+	sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 120, pg))
 	//sc.Spawn(walker.WalkerProgram(float64(size/2), float64(size/2), 240, pg))
 
+	h.SayHello()
 	<-done
+	h.Stop()
 	sc.Stop()
 	fmt.Println("screen stopped")
 }

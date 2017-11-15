@@ -1,23 +1,33 @@
 package process
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 // Proc contains a mapping of all created routines.
 type Proc struct {
 	//stop chan bool
+	wg sync.WaitGroup
 	ps map[int](chan int)
 	i  int
 }
 
 // Make creates a new Proc.
 func Make() Proc {
-	return Proc{make(map[int](chan int)), 0}
+	return Proc{sync.WaitGroup{}, make(map[int](chan int)), 0}
+}
+
+func (p *Proc) done() {
+	fmt.Println("defered WG done")
+	p.wg.Done()
 }
 
 // TODO This type of setup disallows looping 'f'
 // TODO change Program type to give more controll to caller?
-func start(stop chan int, name interface{}, f func()) {
+func (p *Proc) start(stop chan int, name interface{}, f func()) {
 	go func() {
+		defer p.done()
 		for {
 			select {
 			default:
@@ -40,9 +50,10 @@ func (p *Proc) Spawn(f func()) {
 func (p *Proc) SpawnNamed(name interface{}, f func()) {
 	c := make(chan int)
 	p.ps[p.i] = c
-	start(c, name, f)
+	p.start(c, name, f)
 	fmt.Println("Starting process ", p.i, " named ", name)
 	p.i++
+	p.wg.Add(1)
 
 }
 
@@ -51,6 +62,7 @@ func (p *Proc) Stop() {
 	for i, c := range p.ps {
 		c <- i
 	}
+	p.wg.Wait()
 }
 
 /*
