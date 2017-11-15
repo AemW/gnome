@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/AemW/gnome/screen"
-	"github.com/AemW/gnome/walker"
+	"github.com/AemW/gnome/canvas"
+	"github.com/AemW/gnome/painter"
 )
 
 func main() {
@@ -19,39 +19,40 @@ func main() {
 	fmt.Println("The delay is: ", *delay)
 	rand.Seed(time.Now().Unix())
 	go program(time.Duration(*delay), *size)
-	screen.Init()
+	canvas.Init()
 
 }
 
 func program(delay time.Duration, size int) {
 
 	// Window instantiation
-	sc := screen.Make(size, size, "Walker")
+	sc := canvas.Make(size, size, "Walker")
 
 	// Start listening for input events
 	done := make(chan bool)
 	sc.StartEventhandler(done)
 
 	// Painter
-	sc.SpawnPainter(delay)
+	sc.PrepareBrush(delay)
 
-	h := walker.MakeHive()
+	h, proc := painter.Gather()
+	sc.SpawnProc(proc)
 
-	// The walker programs
-	pg := func(w *walker.Walker) {
+	// The painter programs
+	pg := func(w *painter.Painter) {
 		//w.TriTriangle(40)
-		w.Panic()
+		w.Random()
 		// nice without radian calc
 		//w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
 	}
 
-	sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 0, pg))
-	sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 120, pg))
+	h.Paint(float64(size/2), float64(size/2), 0, pg)
+
+	//sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 0, pg))
+	//sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 120, pg))
 	//sc.Spawn(walker.WalkerProgram(float64(size/2), float64(size/2), 240, pg))
 
-	h.SayHello()
 	<-done
-	h.Stop()
 	sc.Stop()
-	fmt.Println("screen stopped")
+	fmt.Println("canvas stopped")
 }

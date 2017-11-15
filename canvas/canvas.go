@@ -1,4 +1,4 @@
-package screen
+package canvas
 
 import (
 	"fmt"
@@ -20,19 +20,23 @@ type Pixel struct {
 	Color color.Color
 }
 
-// Painter is a channel for Pixels.
-type Painter chan Pixel
+// Brush is a channel for Pixels.
+type Brush chan Pixel
 
-// Screen represents the current screen and the routines that modify it.
-type Screen struct {
+// Canvas represents the current canvas and the routines that modify it.
+type Canvas struct {
 	window    wde.Window
 	processes process.Proc
-	painter   Painter
+	brush     Brush
 }
 
 // Program is a function which given a Painter returns a function that when
 // executed sends Pixels through the Painter channel.
-type Program func(Painter) func()
+type Program func(Brush) func()
+
+// v is a function which given a Painter returns a function that when
+// executed sends Pixels through the Painter channel.
+type Process func(Brush) func(chan int)
 
 // Init 'runs' the graphical backend (has to run in the main routine).
 func Init() {
@@ -41,7 +45,7 @@ func Init() {
 
 // Make creates a new Screen of size "xSize * ySize" and 'title'
 // as window title.
-func Make(xSize, ySize int, title string) Screen {
+func Make(xSize, ySize int, title string) Canvas {
 	// Window instantiation
 	// TODO error?
 	dw, err := wde.NewWindow(xSize, ySize)
@@ -52,21 +56,21 @@ func Make(xSize, ySize int, title string) Screen {
 	dw.SetTitle("Title!")
 	dw.SetSize(xSize, ySize)
 	dw.Show()
-	return Screen{dw, process.Make(), make(Painter)}
+	return Canvas{dw, process.Make(), make(Brush)}
 }
 
-// SpawnPainter spawns a new goroutine which listens to the Screen's
-// Painter channel and renders every received Pixel with a 'delay' ms delay.
-func (s *Screen) SpawnPainter(delay time.Duration) {
+// PrepareBrush spawns a new goroutine which listens to the Canvas's
+// Brush channel and renders every received Pixel with a 'delay' ms delay.
+func (s *Canvas) PrepareBrush(delay time.Duration) {
 	/*s.processes.SpawnNamed("Painter", func() {
-		v := <-s.painter
+		v := <-s.brush
 		im := s.window.Screen()
 		im.Set(round(v.X), round(v.Y), color.White)
 		time.Sleep(time.Millisecond * delay)
 		s.window.FlushImage()
 	})*/
 	go func() {
-		for p := range s.painter {
+		for p := range s.brush {
 			im := s.window.Screen()
 			im.Set(round(p.X), round(p.Y), p.Color)
 			time.Sleep(time.Millisecond * delay)
@@ -76,16 +80,21 @@ func (s *Screen) SpawnPainter(delay time.Duration) {
 }
 
 // Spawn start a new goroutine which repeatedly executes the 'prog' Program
-func (s *Screen) Spawn(prog Program) {
-	s.processes.SpawnNamed("Program", prog(s.painter))
+func (s *Canvas) Spawn(prog Program) {
+	s.processes.SpawnNamed("Painter", prog(s.brush))
+}
+
+// SpawnProc start a new goroutine which executes the 'proc' Process
+func (s *Canvas) SpawnProc(proc Process) {
+	s.processes.SpawnListener("Process", proc(s.brush))
 }
 
 // Stop sends a stop signal to all started routines and closes both the Painter
 // channel and the graphical backend.
-func (s *Screen) Stop() {
+func (s *Canvas) Stop() {
 	//s.processes.Enumerate()
 	s.processes.Stop()
-	close(s.painter)
+	close(s.brush)
 	s.window.Close()
 	wde.Stop()
 }
@@ -98,7 +107,7 @@ func round(f float64) int {
 }
 
 // StartEventhandler starts a listener for keyboard and mouse events.
-func (s *Screen) StartEventhandler(done chan bool) {
+func (s *Canvas) StartEventhandler(done chan bool) {
 	go func(dw wde.Window) {
 		events := dw.EventChan()
 	loop:

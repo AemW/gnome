@@ -23,22 +23,24 @@ func (p *Proc) done() {
 	p.wg.Done()
 }
 
-// TODO This type of setup disallows looping 'f'
-// TODO change Program type to give more controll to caller?
-func (p *Proc) start(stop chan int, name interface{}, f func()) {
+func (p *Proc) start(stop chan int, name interface{}, f func(chan int)) {
 	go func() {
 		defer p.done()
-		for {
-			select {
-			default:
-				f()
-			case i := <-stop:
-				fmt.Println("Stoping process: ", name, " ", i)
-				close(stop)
-				return
-			}
-		}
+		f(stop)
+		fmt.Println("Stoping process: ", name)
+		close(stop)
 	}()
+}
+
+// SpawnListener spwans a routine with a function which listens
+// to a channel.
+func (p *Proc) SpawnListener(name interface{}, f func(chan int)) {
+	c := make(chan int)
+	p.ps[p.i] = c
+	p.start(c, name, f)
+	fmt.Println("Starting process ", p.i, " named ", name)
+	p.i++
+	p.wg.Add(1)
 }
 
 // Spawn creates a new routine running function 'f'.
@@ -48,12 +50,17 @@ func (p *Proc) Spawn(f func()) {
 
 // SpawnNamed creates a new routine named 'name' running function 'f'.
 func (p *Proc) SpawnNamed(name interface{}, f func()) {
-	c := make(chan int)
-	p.ps[p.i] = c
-	p.start(c, name, f)
-	fmt.Println("Starting process ", p.i, " named ", name)
-	p.i++
-	p.wg.Add(1)
+	fs := func(stop chan int) {
+		for {
+			select {
+			default:
+				f()
+			case <-stop:
+				return
+			}
+		}
+	}
+	p.SpawnListener(name, fs)
 
 }
 
