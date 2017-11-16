@@ -3,10 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"math/rand"
 	"time"
 
-	"github.com/AemW/gnome/canvas"
+	"github.com/AemW/gnome/easel"
 	"github.com/AemW/gnome/painter"
 )
 
@@ -17,42 +16,33 @@ func main() {
 	flag.Parse()
 
 	fmt.Println("The delay is: ", *delay)
-	rand.Seed(time.Now().Unix())
 	go program(time.Duration(*delay), *size)
-	canvas.Init()
+	easel.Init()
 
 }
 
 func program(delay time.Duration, size int) {
 
-	// Window instantiation
-	sc := canvas.Make(size, size, "Walker")
+	// Easel instantiation
+	e := easel.Make(size, size, "rtPaint")
 
-	// Start listening for input events
-	done := make(chan bool)
-	sc.StartEventhandler(done)
+	collab, manager := painter.MakeCollaboration()
 
-	// Painter
-	sc.PrepareBrush(delay)
+	complete := e.PrepareEasel(delay, manager)
 
-	h, proc := painter.Gather()
-	sc.SpawnProc(proc)
-
-	// The painter programs
-	pg := func(w *painter.Painter) {
+	sketch := func(b *painter.Brush) {
 		//w.TriTriangle(40)
-		w.Random()
+		b.Random()
 		// nice without radian calc
 		//w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
 	}
 
-	h.Paint(float64(size/2), float64(size/2), 0, pg)
+	collab.Paint(float64(size/2), float64(size/2), 0, sketch)
 
 	//sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 0, pg))
 	//sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 120, pg))
 	//sc.Spawn(walker.WalkerProgram(float64(size/2), float64(size/2), 240, pg))
 
-	<-done
-	sc.Stop()
-	fmt.Println("canvas stopped")
+	<-complete
+	e.Finish()
 }

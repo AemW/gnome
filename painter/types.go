@@ -1,88 +1,84 @@
 package painter
 
 import (
-	"fmt"
 	"image/color"
 	"math"
 
-	"github.com/AemW/gnome/canvas"
+	"github.com/AemW/gnome/easel"
 	"github.com/AemW/gnome/process"
 )
 
-// Team is a structure keeping track of all walkers.
-type Team struct {
+// Collaboration is a structure keeping track of all working painters.
+type Collaboration struct {
 	process.Proc
-	chat  Chat
-	brush canvas.Brush
+	chat   Chat
+	canvas easel.Canvas
 }
 
-type Sketch func(*Painter)
+// Sketch is a plan for a painting waiting for a Brush
+type Sketch func(*Brush)
 type link chan Sketch
 
 // Chat is a set of links
 type Chat []link
 
-// Painter represents an entiry which "walks" around the plane, sending
+// Brush represents an entiry which moves around the plane, sending
 // it's coordinates through a channel during each step.
-type Painter struct {
-	x, y, a  float64
-	c        color.Color
-	painting bool
-	brush    canvas.Brush
-	phone    link
+type Brush struct {
+	x, y, a float64
+	c       color.Color
+	moving  bool
+	canvas  easel.Canvas
+	holder  link
 }
 
 /////////////////////////////////// Creation ///////////////////////////////////
 
-func makeTeam() Team {
-	return Team{process.Make(), make(Chat, 0, 10), nil}
+func makeCollab() Collaboration {
+	return Collaboration{process.Make(), make(Chat, 0, 10), nil}
 }
 
-// AriseAt creates a new Walker at point {'x', 'y'} with an initial angle 'a'.
-func (h *Team) AriseAt(x, y, a float64) Painter {
-	if h.brush == nil {
-
-	}
-	//brush <- Pixel{x, y}
+// StartAt creates a new Brush at point {'x', 'y'} with an initial angle 'a'.
+func (c *Collaboration) StartAt(x, y, a float64) Brush {
 	l := make(link)
-	h.add(l)
-	return Painter{x, y, a, color.White, true, h.brush, l}
+	c.add(l)
+	return Brush{x, y, a, color.White, true, c.canvas, l}
 }
 
-// Arise creates a new Walker at point {0, 0} with an initial angle 0.
-func (h *Team) Arise() Painter {
-	return h.AriseAt(0, 0, 0)
+// Start creates a new Brush at point {0, 0} with an initial angle 0.
+func (c *Collaboration) Start() Brush {
+	return c.StartAt(0, 0, 0)
 }
 
-func (h *Team) Paint(x, y, a float64, f Sketch) {
-	w := h.AriseAt(x, y, a)
-	if h.brush == nil {
-		fmt.Println("men vad faaaaan!")
-	}
-	h.SpawnNamed("Walker", func() {
-		f(&w)
+// Paint has one painter start painting according to the given Sketch
+// from the given Brush coordinates.
+func (c *Collaboration) Paint(x, y, a float64, sketch Sketch) {
+	b := c.StartAt(x, y, a)
+	c.SpawnNamed("Brush", func() {
+		sketch(&b)
 	})
 }
 
-func Gather() (*Team, canvas.Process) {
-	h := makeTeam()
-	return &h, func(b canvas.Brush) func(chan int) {
-		h.brush = b
+// MakeCollaboration start a new Collaboration around a manager Painter.
+func MakeCollaboration() (*Collaboration, easel.Painter) {
+	h := makeCollab()
+	return &h, func(b easel.Canvas) func(chan int) {
+		h.canvas = b
 		return func(s chan int) { h.listen(s) }
 	}
 }
 
-func (h *Team) listen(s chan int) {
+func (c *Collaboration) listen(s chan int) {
 	for {
 		select {
 		case <-s:
-			h.StopPainting()
+			c.StopPainting()
 			return
 		default:
-			for _, c := range h.chat {
+			for _, b := range c.chat {
 				select {
-				case f := <-c:
-					h.Paint(0, 0, 0, f)
+				case f := <-b:
+					c.Paint(0, 0, 0, f)
 				default:
 					// Nothing
 				}
@@ -93,18 +89,18 @@ func (h *Team) listen(s chan int) {
 
 /////////////////////////////////// Commands ///////////////////////////////////
 
-// StopPainting signals all painters to stop
-func (h *Team) StopPainting() {
-	h.send1(func(w *Painter) { w.Stop() })
-	h.Stop()
+// StopPainting signals all painters to stop painting.
+func (c *Collaboration) StopPainting() {
+	c.send1(func(w *Brush) { w.Stop() })
+	c.Stop()
 }
 
-func (h *Team) send(f func()) {
-	h.send1(func(w *Painter) { f() })
+func (c *Collaboration) send(f func()) {
+	c.send1(func(w *Brush) { f() })
 }
 
-func (h *Team) send1(f func(w *Painter)) {
-	for _, n := range h.chat {
+func (c *Collaboration) send1(f func(w *Brush)) {
+	for _, n := range c.chat {
 		n <- f
 	}
 }
@@ -115,27 +111,27 @@ const toRad = math.Pi / 180
 const radsPerCircle = math.Pi * 2
 
 // Modify the state of the painter's brush
-func (w *Painter) modState(x, y, a float64) *Painter {
-	w.listen()
-	if w.painting {
-		w.x += x
-		w.y += y
-		w.a = math.Remainder(w.a+a, radsPerCircle)
-		if w.brush != nil {
-			w.brush <- canvas.Pixel{X: w.x, Y: w.y, Color: w.c}
+func (b *Brush) modState(x, y, a float64) *Brush {
+	b.listen()
+	if b.moving {
+		b.x += x
+		b.y += y
+		b.a = math.Remainder(b.a+a, radsPerCircle)
+		if b.canvas != nil {
+			b.canvas <- easel.Pixel{X: b.x, Y: b.y, Color: b.c}
 		}
 	}
-	return w
+	return b
 }
 
-func (w *Painter) listen() {
+func (b *Brush) listen() {
 	select {
-	case f := <-w.phone:
-		f(w)
+	case f := <-b.holder:
+		f(b)
 	default:
 	}
 }
 
-func (h *Team) add(l link) {
-	h.chat = append(h.chat, l)
+func (c *Collaboration) add(l link) {
+	c.chat = append(c.chat, l)
 }
