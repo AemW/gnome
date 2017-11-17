@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/AemW/gnome/easel"
@@ -16,19 +17,20 @@ func main() {
 	flag.Parse()
 
 	fmt.Println("The delay is: ", *delay)
-	go program(time.Duration(*delay), *size)
-	easel.Init()
+	rand.Seed(time.Now().Unix())
+	f := easel.NewFrame(*size, *size, "rtPaint", time.Duration(*delay))
+	easel.Draw(f, program)
 
 }
 
-func program(delay time.Duration, size int) {
+func program(f easel.Frame) {
 
 	// Easel instantiation
-	e := easel.Make(size, size, "rtPaint")
+	e := easel.Make(f)
 
 	collab, manager := painter.MakeCollaboration()
 
-	complete := e.PrepareEasel(delay, manager)
+	complete := e.PrepareEasel(manager)
 
 	sketch := func(b *painter.Brush) {
 		//w.TriTriangle(40)
@@ -37,7 +39,7 @@ func program(delay time.Duration, size int) {
 		//w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
 	}
 
-	collab.Paint(float64(size/2), float64(size/2), 0, sketch)
+	collab.Paint(float64(f.XSize/2), float64(f.YSize/2), 0, sketch)
 
 	//sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 0, pg))
 	//sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 120, pg))

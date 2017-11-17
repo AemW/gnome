@@ -4,28 +4,13 @@ import (
 	"image/color"
 	"image/color/palette"
 	"math/rand"
-	"runtime"
 	"time"
 
-	backend "github.com/AemW/gnome/easel/wde"
+	"github.com/AemW/gnome/easel/backend"
+	glfw "github.com/AemW/gnome/easel/glfw"
+	wde "github.com/AemW/gnome/easel/wde"
 	"github.com/AemW/gnome/process"
-	"github.com/skelterjohn/go.wde"
-	// Import necessary for graphical backend.
-	_ "github.com/skelterjohn/go.wde/xgb"
 )
-
-type canvas interface {
-	Set(p *Pixel)
-	Flush()
-	Init()
-	Channel() Canvas
-	Close()
-}
-
-type canvasFactory interface {
-	Make(xSize, ySize int, title string) canvas
-	Init()
-}
 
 // Pixel represents a pixel by its coordinates and color.
 type Pixel struct {
@@ -42,29 +27,53 @@ type Easel struct {
 	processes process.Proc
 	canvas    Canvas
 	rand      *rand.Rand
+	frame     Frame
+}
+
+type Frame struct {
+	XSize int
+	YSize int
+	Title string
+	Delay time.Duration
+}
+
+func NewFrame(xSize int, ySize int, title string, delay time.Duration) Frame {
+	return Frame{XSize: xSize, YSize: ySize, Title: title, Delay: delay}
 }
 
 // Painter is a function which given a Canvas returns a function that when
 // executed sends Pixels through to the Canvas channel.
 type Painter func(Canvas) func(chan int)
 
-// Init 'runs' the graphical backend (has to run in the main routine).
-func Init() {
-	backend.Factory{}.Init()
+func Draw(fr Frame, f func(Frame)) {
+	go f(fr)
+	getFactory().Run()
+}
+
+func getFactory() backend.CanvasFactory {
+	i := 1
+	switch i {
+	case 1:
+		return wde.Factory{}
+	case 2:
+		return glfw.Factory{}
+	default:
+		return wde.Factory{}
+	}
 }
 
 // Make creates a new Easel of size "xSize * ySize" and 'title'
 // as window title.
-func Make(xSize, ySize int, title string) Easel {
-	fac := backend.Factory{}
-	return Easel{fac.Make(xSize, ySize, title), process.Make(), make(Canvas), rand.New(rand.NewSource(time.Now().Unix()))}
+func Make(f Frame) Easel {
+	cvs := getFactory().Make(f.XSize, f.YSize, f.Title)
+	return Easel{cvs, process.Make(), make(Canvas), rand.New(rand.NewSource(time.Now().Unix())), f}
 }
 
 // PrepareEasel sets up the easel, canvas, and manager painter
-func (e *Easel) PrepareEasel(delay time.Duration, manager Painter) chan bool {
+func (e *Easel) PrepareEasel(manager Painter) chan bool {
 	done := make(chan bool)
-	e.startEventhandler(done)
-	e.prepareCanvas(delay)
+	e.cvs.StartEventhandler(done)
+	e.prepareCanvas(e.frame.Delay)
 
 	e.start(manager)
 
@@ -83,7 +92,7 @@ func (e *Easel) prepareCanvas(delay time.Duration) {
 		s.window.FlushImage()
 	})*/
 	go func() {
-		for p := range e.cvs.Channel() {
+		for p := range e.canvas {
 			e.cvs.Set(p.X, p.Y, p.Color)
 			time.Sleep(time.Millisecond * delay)
 			e.cvs.Flush()
@@ -103,7 +112,6 @@ func (e *Easel) Finish() {
 	e.processes.Stop()
 	close(e.canvas)
 	e.cvs.Close()
-	wde.Stop()
 }
 
 var pSize = len(palette.Plan9)
@@ -113,6 +121,7 @@ func (e *Easel) RandomColor() color.Color {
 	return palette.Plan9[e.rand.Intn(pSize)]
 }
 
+/*
 // startEventhandler starts a listener for keyboard and mouse events.
 func (e *Easel) startEventhandler(done chan bool) {
 	go func(dw wde.Window) {
@@ -193,3 +202,4 @@ func (e *Easel) startEventhandler(done chan bool) {
 		done <- true
 	}(e.window)
 }
+*/

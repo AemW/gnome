@@ -37,6 +37,8 @@ func (b *Brush) Random() *Brush {
 	return b
 }
 
+var pSize = len(palette.Plan9)
+
 // RandomColor changes the color of the walker's trace randomly.
 func (b *Brush) RandomColor() *Brush {
 	return b.ChangeColor(palette.Plan9[rand.Intn(pSize)])
@@ -57,7 +59,7 @@ func (b *Brush) GetHelp(s Sketch) *Brush {
 
 //////////////////////////////////// Shapes ////////////////////////////////////
 
-const granularity = 20
+const granularity = 30
 
 // Circle has the walker move around in a circle with radius 'radius'.
 func (b *Brush) Circle(radius float64) *Brush {
