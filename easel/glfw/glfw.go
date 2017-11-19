@@ -30,6 +30,7 @@ func (f Factory) Make(xSize, ySize int, title string) backend.Canvas {
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
 	glfw.WindowHint(glfw.ContextVersionMinor, 0)
 	glfw.WindowHint(glfw.Resizable, glfw.True)
+	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
 	win, err := glfw.CreateWindow(xSize, ySize, title, nil, nil)
 

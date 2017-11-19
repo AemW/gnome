@@ -23,10 +23,7 @@ func main() {
 
 }
 
-func program(f easel.Frame) {
-
-	// Easel instantiation
-	e := easel.Make(f)
+func program(e *easel.Easel) {
 
 	collab, manager := painter.MakeCollaboration()
 
@@ -39,12 +36,11 @@ func program(f easel.Frame) {
 		//w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
 	}
 
-	collab.Paint(float64(f.XSize/2), float64(f.YSize/2), 0, sketch)
+	collab.Paint(float64(e.Frame.XSize/2), float64(e.Frame.YSize/2), 0, sketch)
 
 	//sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 0, pg))
 	//sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 120, pg))
 	//sc.Spawn(walker.WalkerProgram(float64(size/2), float64(size/2), 240, pg))
 
 	<-complete
-	e.Finish()
 }

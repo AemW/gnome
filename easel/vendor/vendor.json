@@ -129,6 +129,19 @@
 			"revisionTime": "2016-09-19T17:57:55Z"
 		},
 		{
+			"checksumSHA1": "HfwB3/kNbEZ3xzCw8Eq2aV5RB+U=",
+			"path": "github.com/go-gl/gl/v3.3-core/gl",
+			"revision": "ac0d3d2af0fe995e2bb09fa6619b716b0c0fc0fa",
+			"revisionTime": "2017-09-15T06:14:32Z"
+		},
+		{
+			"checksumSHA1": "v9Sx73Oy5ncZd0LpVLxGF0k5Sio=",
+			"path": "github.com/go-gl/glfw/v3.2/glfw",
+			"revision": "513e4f2bf85c31fba0fc4907abd7895242ccbe50",
+			"revisionTime": "2017-08-14T18:07:46Z",
+			"tree": true
+		},
+		{
 			"checksumSHA1": "trLahY/SuQNN3j+7tMmUPYsIngc=",
 			"path": "github.com/skelterjohn/go.wde",
 			"revision": "b136a09f7afb9b8c7ccaa7f9d42ec9aa729bebc8",
@@ -141,5 +154,5 @@
 			"revisionTime": "2017-05-14T14:52:00Z"
 		}
 	],
-	"rootPath": "github.com/AemW/gnome/screen"
+	"rootPath": "github.com/AemW/gnome/easel"
 }
