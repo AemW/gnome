@@ -86,9 +86,8 @@ func makeEasel(f Frame) Easel {
 
 // PrepareEasel sets up the easel, canvas, and manager painter
 func (e *Easel) PrepareEasel(manager Painter) chan bool {
-	done := make(chan bool)
-	e.cvs.StartEventhandler(done)
-	e.prepareCanvas(e.Frame.Delay)
+	//done := make(chan bool)
+	done := e.prepareCanvas(e.Frame.Delay)
 
 	e.start(manager)
 
@@ -98,14 +97,19 @@ func (e *Easel) PrepareEasel(manager Painter) chan bool {
 
 // prepareCanvas spawns a new goroutine which listens to the Easels's
 // Painter channel and renders every received Pixel with a 'delay' ms delay.
-func (e *Easel) prepareCanvas(delay time.Duration) {
+func (e *Easel) prepareCanvas(delay time.Duration) chan bool {
+	done := make(chan bool)
 	go func() {
+		e.cvs.Prepare()
+		e.cvs.StartEventhandler(done)
 		for p := range e.canvas {
 			e.cvs.Set(p.X, p.Y, p.Color)
 			time.Sleep(time.Millisecond * delay)
 			e.cvs.Flush()
 		}
 	}()
+
+	return done
 }
 
 // start starts a new goroutine which executes the 'painter' Painter

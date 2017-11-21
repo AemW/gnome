@@ -9,6 +9,7 @@ type Canvas interface {
 	StartEventhandler(chan bool)
 	Flush()
 	Close()
+	Prepare()
 }
 
 type CanvasFactory interface {

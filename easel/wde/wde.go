@@ -35,6 +35,10 @@ type Canvas struct {
 	window wde.Window
 }
 
+func (c *Canvas) Prepare() {
+	//c.window.MakeContextCurrent()
+}
+
 func (c *Canvas) Set(x, y float64, color color.Color) {
 	im := c.window.Screen()
 	im.Set(round(x), round(y), color)

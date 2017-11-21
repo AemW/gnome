@@ -13,7 +13,7 @@ import (
 func main() {
 
 	delay := flag.Int64("d", 10, "Screen flush delay (ms)")
-	size := flag.Int("s", 500, "Screen size")
+	size := flag.Int("s", 600, "Screen size")
 	flag.Parse()
 
 	fmt.Println("The delay is: ", *delay)
