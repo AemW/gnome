@@ -1,8 +1,12 @@
 package glfw
 
-import "image/color"
+import (
+	"image/color"
 
-type board [][]pixel
+	"github.com/go-gl/gl/v3.3-core/gl"
+)
+
+type board [][]*pixel
 
 type pixel struct {
 	x, y int
@@ -17,11 +21,10 @@ var square = []float32{
 
 	-0.5, 0.5, 0,
 	0.5, 0.5, 0,
-	0.5, -0.5, 0,
-}
+	0.5, -0.5, 0}
 
-func MakeBoard(xSize, ySize int) board {
-	b := make([][]pixel, xSize, ySize)
+func makeBoard(xSize, ySize int) board {
+	b := make([][]*pixel, xSize, xSize)
 	for i := 0; i < xSize; i++ {
 		for j := 0; j < xSize; j++ {
 			b[i] = append(b[i], makePixel(i, j, xSize, ySize))
@@ -43,16 +46,15 @@ func (b *board) Draw() {
 }
 
 func (p *pixel) draw() {
-	//gl.BindVertexArray(c.drawable)
-	//gl.DrawArrays(gl.TRIANGLES, 0, int32(len(square) / 3))
+	gl.BindVertexArray(p.img)
+	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(square)/3))
 }
 
-var sqlen = len(square)
-
-func makePixel(x, y, height, width int) pixel {
-	var points []float32
+/*
+func makePixel(x, y, height, width int) *pixel {
+	points := make([]float32, len(square), len(square))
 	copy(points, square)
-	for i := 0; i < sqlen; i++ {
+	for i := 0; i < len(points); i++ {
 		switch i % 3 {
 		case 0:
 			points[i] = point(x, width, points[i])
@@ -63,7 +65,39 @@ func makePixel(x, y, height, width int) pixel {
 		}
 	}
 
-	return pixel{x: x, y: y, c: color.White, img: makeVao(points)}
+	return &pixel{x: x, y: y, c: color.White, img: makeVao(points)}
+}*/
+func makePixel(x, y, rows, columns int) *pixel {
+	points := make([]float32, len(square), len(square))
+	copy(points, square)
+
+	for i := 0; i < len(points); i++ {
+		var position float32
+		var size float32
+		switch i % 3 {
+		case 0:
+			size = 1.0 / float32(columns)
+			position = float32(x) * size
+		case 1:
+			size = 1.0 / float32(rows)
+			position = float32(y) * size
+		default:
+			continue
+		}
+
+		if points[i] < 0 {
+			points[i] = (position * 2) - 1
+		} else {
+			points[i] = ((position + size) * 2) - 1
+		}
+	}
+
+	return &pixel{
+		img: makeVao(points),
+
+		x: x,
+		y: y,
+	}
 }
 
 func point(a, b int, p float32) float32 {
@@ -77,5 +111,17 @@ func point(a, b int, p float32) float32 {
 }
 
 func makeVao(points []float32) uint32 {
-	return 0
+	var vbo uint32
+	gl.GenBuffers(1, &vbo)
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+	gl.BufferData(gl.ARRAY_BUFFER, len(points)*4, gl.Ptr(points), gl.STATIC_DRAW)
+
+	var vao uint32
+	gl.GenVertexArrays(1, &vao)
+	gl.BindVertexArray(vao)
+	gl.EnableVertexAttribArray(vao)
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
+
+	return vao
 }

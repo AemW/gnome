@@ -21,7 +21,7 @@ func (f Factory) Run() {
 }
 
 func (f Factory) Make(xSize, ySize int, title string) backend.Canvas {
-	cs := Canvas{window: nil, x: xSize, y: ySize, title: title}
+	cs := Canvas{x: xSize, y: ySize, title: title}
 	return &cs
 }
 
@@ -49,23 +49,32 @@ func (c *Canvas) Prepare() {
 		panic(err)
 	}
 
-	gl.ClearColor(1.0, 0.5, 0, 1.0)
+	//gl.ClearColor(1.0, 1.0, 1.0, 1.0)
 
 	var b uint32
 	gl.GenBuffers(1, &b)
 	gl.BindBuffer(gl.ARRAY_BUFFER, b)
 
-	c.window = win
+	c.context = &glfwContext{window: win, board: makeBoard(20, 20), program: shadedProgram()}
+
 }
 
 //////////////////////////// implements easel.canvas ///////////////////////////
+
 type Canvas struct {
-	window *glfw.Window
-	x, y   int
-	title  string
+	context *glfwContext
+	x, y    int
+	title   string
+}
+
+type glfwContext struct {
+	window  *glfw.Window
+	board   board
+	program uint32
 }
 
 func (c *Canvas) Set(x, y float64, color color.Color) {
+	//c.context.board[round(x)][round(y)].c = color
 	//point := []float32{float32(x), float32(y)}
 	//gl.BufferData(gl.ARRAY_BUFFER, size, data, usage)
 
@@ -76,21 +85,28 @@ func (c *Canvas) Set(x, y float64, color color.Color) {
 func (c *Canvas) Flush() {
 	//gl.ClearColor(1.0, 0, 0.5, 1.0)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	c.window.SwapBuffers()
+	gl.UseProgram(c.context.program)
+
+	//c.board.Draw()
+	c.context.board.Draw()
+
 	glfw.PollEvents()
+	c.context.window.SwapBuffers()
 
 }
 
 func (c *Canvas) Close() {
 	glfw.Terminate()
+	c.context.window.Destroy()
 }
 
 // startEventhandler starts a listener for keyboard and mouse events.
 func (c *Canvas) StartEventhandler(done chan bool) {
-	c.window.SetCharCallback(func(w *glfw.Window, char rune) {
+	c.context.window.SetCharCallback(func(w *glfw.Window, char rune) {
 		switch char {
 		case '4':
-			w.Destroy()
+			//w.Destroy
+			done <- true
 		}
 	})
 	/*
