@@ -51,7 +51,7 @@ func (c *Canvas) Prepare() {
 
 	c.context = &glfwContext{
 		window:  win,
-		board:   makeBoard(100, 100),
+		board:   makeBoard(c.x, c.y),
 		program: shadedProgram()}
 
 }
@@ -64,11 +64,20 @@ type Canvas struct {
 	title   string
 }
 
-func (c *Canvas) Set(x, y float64, color color.Color) {
+// Set sets the color of a pixel.
+func (c *Canvas) Set(x, y float64, cl color.Color) {
 	xf := round(x)
 	yf := round(y)
 	if xf < c.x && xf >= 0 && yf < c.y && yf >= 0 {
-		c.context.board[xf][yf].c = color
+		c.context.clrd = c.context.board[xf][yf]
+		c.context.board[xf][yf].c = cl
+		/*
+			p := c.context.board[xf][yf]
+			if p.c == color.Black {
+				c.context.clrd = append(c.context.clrd, p)
+			}
+			p.c = cl
+		*/
 	}
 	//point := []float32{float32(x), float32(y)}
 	//gl.BufferData(gl.ARRAY_BUFFER, size, data, usage)
@@ -79,7 +88,7 @@ func (c *Canvas) Set(x, y float64, color color.Color) {
 
 func (c *Canvas) Flush() {
 	//gl.ClearColor(1.0, 0, 0.5, 1.0)
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	//	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UseProgram(c.context.program)
 
 	c.context.Draw()

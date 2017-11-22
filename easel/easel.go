@@ -65,17 +65,41 @@ func Draw(fr Frame, f func(*Easel)) {
 
 }
 
+//////////////////////////////// Backend engine ////////////////////////////////
+// Engine
+type Engine interface {
+	Engine() engine
+}
+
+type engine int
+
+var _engine = WDE
+
+const (
+	WDE engine = iota
+	GLFW
+)
+
+func (e engine) Engine() engine {
+	return e
+}
+
+func SetEngine(b Engine) {
+	_engine = b.Engine()
+}
+
 func getFactory() backend.CanvasFactory {
-	i := 2
-	switch i {
-	case 1:
+	switch _engine {
+	case WDE:
 		return wde.Factory{}
-	case 2:
+	case GLFW:
 		return glfw.Factory{}
 	default:
 		return wde.Factory{}
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 // makeEasel creates a new Easel of size "xSize * ySize" and 'title'
 // as window title.

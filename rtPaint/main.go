@@ -18,6 +18,7 @@ func main() {
 
 	fmt.Println("The delay is: ", *delay)
 	rand.Seed(time.Now().Unix())
+	easel.SetEngine(easel.GLFW)
 	f := easel.NewFrame(*size, *size, "rtPaint", time.Duration(*delay))
 	easel.Draw(f, program)
 
