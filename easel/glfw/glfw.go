@@ -33,9 +33,9 @@ func (c *Canvas) Prepare() {
 		panic(fmt.Errorf("could not initialize glfw: %v", err))
 	}
 
+	glfw.WindowHint(glfw.Resizable, glfw.False)
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)
 	glfw.WindowHint(glfw.ContextVersionMinor, 0)
-	glfw.WindowHint(glfw.Resizable, glfw.True)
 	//glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
 	win, err := glfw.CreateWindow(c.x, c.y, c.title, nil, nil)
@@ -49,13 +49,10 @@ func (c *Canvas) Prepare() {
 		panic(err)
 	}
 
-	//gl.ClearColor(1.0, 1.0, 1.0, 1.0)
-
-	var b uint32
-	gl.GenBuffers(1, &b)
-	gl.BindBuffer(gl.ARRAY_BUFFER, b)
-
-	c.context = &glfwContext{window: win, board: makeBoard(20, 20), program: shadedProgram()}
+	c.context = &glfwContext{
+		window:  win,
+		board:   makeBoard(100, 100),
+		program: shadedProgram()}
 
 }
 
@@ -67,14 +64,12 @@ type Canvas struct {
 	title   string
 }
 
-type glfwContext struct {
-	window  *glfw.Window
-	board   board
-	program uint32
-}
-
 func (c *Canvas) Set(x, y float64, color color.Color) {
-	//c.context.board[round(x)][round(y)].c = color
+	xf := round(x)
+	yf := round(y)
+	if xf < c.x && xf >= 0 && yf < c.y && yf >= 0 {
+		c.context.board[xf][yf].c = color
+	}
 	//point := []float32{float32(x), float32(y)}
 	//gl.BufferData(gl.ARRAY_BUFFER, size, data, usage)
 
@@ -87,8 +82,14 @@ func (c *Canvas) Flush() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UseProgram(c.context.program)
 
-	//c.board.Draw()
-	c.context.board.Draw()
+	c.context.Draw()
+	/*
+		c.context.board[1][1].draw()
+		c.context.board[5][5].draw()
+		c.context.board[10][10].draw()
+		c.context.board[7][7].draw()
+		c.context.board[49][49].draw()
+	*/
 
 	glfw.PollEvents()
 	c.context.window.SwapBuffers()

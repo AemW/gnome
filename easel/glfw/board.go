@@ -4,7 +4,16 @@ import (
 	"image/color"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/glfw/v3.2/glfw"
 )
+
+const PIXEL_COLOR = "pixelColor\x00"
+
+type glfwContext struct {
+	window  *glfw.Window
+	board   board
+	program uint32
+}
 
 type board [][]*pixel
 
@@ -37,20 +46,24 @@ func (b *board) paint(x, y int, c color.Color) {
 	(*b)[x][y].c = c
 }
 
-func (b *board) Draw() {
-	for _, ps := range *b {
+func (c *glfwContext) Draw() {
+
+	uni := gl.GetUniformLocation(c.program, gl.Str(PIXEL_COLOR))
+	for _, ps := range c.board {
 		for _, p := range ps {
-			p.draw()
+			r, g, b, a := p.c.RGBA()
+			//fmt.Println(p.c.RGBA())
+			gl.Uniform4f(uni, norm(r), norm(g), norm(b), norm(a))
+			gl.BindVertexArray(p.img)
+			gl.DrawArrays(gl.TRIANGLES, 0, int32(len(square)/3))
 		}
 	}
 }
 
-func (p *pixel) draw() {
-	gl.BindVertexArray(p.img)
-	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(square)/3))
+func norm(ui uint32) float32 {
+	return float32(ui) / 0XFF
 }
 
-/*
 func makePixel(x, y, height, width int) *pixel {
 	points := make([]float32, len(square), len(square))
 	copy(points, square)
@@ -66,38 +79,6 @@ func makePixel(x, y, height, width int) *pixel {
 	}
 
 	return &pixel{x: x, y: y, c: color.White, img: makeVao(points)}
-}*/
-func makePixel(x, y, rows, columns int) *pixel {
-	points := make([]float32, len(square), len(square))
-	copy(points, square)
-
-	for i := 0; i < len(points); i++ {
-		var position float32
-		var size float32
-		switch i % 3 {
-		case 0:
-			size = 1.0 / float32(columns)
-			position = float32(x) * size
-		case 1:
-			size = 1.0 / float32(rows)
-			position = float32(y) * size
-		default:
-			continue
-		}
-
-		if points[i] < 0 {
-			points[i] = (position * 2) - 1
-		} else {
-			points[i] = ((position + size) * 2) - 1
-		}
-	}
-
-	return &pixel{
-		img: makeVao(points),
-
-		x: x,
-		y: y,
-	}
 }
 
 func point(a, b int, p float32) float32 {
@@ -114,12 +95,12 @@ func makeVao(points []float32) uint32 {
 	var vbo uint32
 	gl.GenBuffers(1, &vbo)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, len(points)*4, gl.Ptr(points), gl.STATIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, 4*len(points), gl.Ptr(points), gl.STATIC_DRAW)
 
 	var vao uint32
 	gl.GenVertexArrays(1, &vao)
 	gl.BindVertexArray(vao)
-	gl.EnableVertexAttribArray(vao)
+	gl.EnableVertexAttribArray(0)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
 

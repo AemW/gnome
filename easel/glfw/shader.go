@@ -10,6 +10,7 @@ import (
 const (
 	vertexShaderSource = `
 		#version 300 es
+
 		in vec3 vp;
 		void main() {
 			gl_Position = vec4(vp, 1.0);
@@ -19,9 +20,11 @@ const (
 	fragmentShaderSource = `
 		#version 300 es
         precision mediump float;
+        uniform vec4 pixelColor;
+
 		out vec4 frag_colour;
 		void main() {
-			frag_colour = vec4(1, 1, 1, 1.0);
+			frag_colour = vec4(pixelColor);
 		}
 	` + "\x00"
 )

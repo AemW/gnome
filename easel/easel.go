@@ -99,16 +99,19 @@ func (e *Easel) PrepareEasel(manager Painter) chan bool {
 // Painter channel and renders every received Pixel with a 'delay' ms delay.
 func (e *Easel) prepareCanvas(delay time.Duration) chan bool {
 	done := make(chan bool)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
 		e.cvs.Prepare()
 		e.cvs.StartEventhandler(done)
+		wg.Done()
 		for p := range e.canvas {
 			e.cvs.Set(p.X, p.Y, p.Color)
 			time.Sleep(time.Millisecond * delay)
 			e.cvs.Flush()
 		}
 	}()
-
+	wg.Wait()
 	return done
 }
 
