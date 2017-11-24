@@ -70,10 +70,10 @@ func MakeCollaboration() (*Collaboration, easel.Painter) {
 
 func (c *Collaboration) listen(s chan int) {
 	for {
+
 		select {
 		case <-s:
-			c.StopPainting()
-			return
+
 		default:
 			for _, b := range c.chat {
 				select {

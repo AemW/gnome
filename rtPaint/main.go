@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
@@ -18,7 +19,7 @@ func main() {
 
 	fmt.Println("The delay is: ", *delay)
 	rand.Seed(time.Now().Unix())
-	easel.SetEngine(easel.GLFW)
+	//easel.SetEngine(easel.GLFW)
 	f := easel.NewFrame(*size, *size, "rtPaint", time.Duration(*delay))
 	easel.Draw(f, program)
 
@@ -32,7 +33,8 @@ func program(e *easel.Easel) {
 
 	sketch := func(b *painter.Brush) {
 		//w.TriTriangle(40)
-		b.Random()
+		//b.Random()
+		b.SpiralOut()
 		// nice without radian calc
 		//w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
 	}
@@ -43,5 +45,8 @@ func program(e *easel.Easel) {
 	//sc.Spawn(h.Scheme(float64(size/2), float64(size/2), 120, pg))
 	//sc.Spawn(walker.WalkerProgram(float64(size/2), float64(size/2), 240, pg))
 
+	log.Println("Waiting for completion signal")
 	<-complete
+	log.Println("Recieved completion signal")
+
 }

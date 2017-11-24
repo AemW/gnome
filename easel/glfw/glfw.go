@@ -79,26 +79,15 @@ func (c *Canvas) Set(x, y float64, cl color.Color) {
 			p.c = cl
 		*/
 	}
-	//point := []float32{float32(x), float32(y)}
-	//gl.BufferData(gl.ARRAY_BUFFER, size, data, usage)
-
-	//im := c.window.Screen()
-	//im.Set(round(x), round(y), color)
 }
 
 func (c *Canvas) Flush() {
-	//gl.ClearColor(1.0, 0, 0.5, 1.0)
+	// Not necessary to clear the screen since we want the previous
+	// traces to remain
 	//	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UseProgram(c.context.program)
 
 	c.context.Draw()
-	/*
-		c.context.board[1][1].draw()
-		c.context.board[5][5].draw()
-		c.context.board[10][10].draw()
-		c.context.board[7][7].draw()
-		c.context.board[49][49].draw()
-	*/
 
 	glfw.PollEvents()
 	c.context.window.SwapBuffers()
@@ -110,23 +99,14 @@ func (c *Canvas) Close() {
 	c.context.window.Destroy()
 }
 
-// startEventhandler starts a listener for keyboard and mouse events.
+// StartEventhandler starts a listener for keyboard and mouse events.
 func (c *Canvas) StartEventhandler(done chan bool) {
 	c.context.window.SetCharCallback(func(w *glfw.Window, char rune) {
 		switch char {
 		case '4':
-			//w.Destroy
 			done <- true
 		}
 	})
-	/*
-	       r := glfw.CharCallback(func(w *glfw.Window, c rune) {
-	   		if c == rune(4) {
-	   			done <- true
-	   		}
-	   	})
-	*/
-
 }
 
 func round(f float64) int {

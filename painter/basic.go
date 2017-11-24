@@ -69,3 +69,10 @@ func (b *Brush) Repeat(i int, f func()) *Brush {
 	}
 	return b
 }
+
+func (b *Brush) Forever(f func()) {
+	for {
+		f()
+	}
+	//return b
+}

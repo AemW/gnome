@@ -1,6 +1,7 @@
 package wde
 
 import (
+	"fmt"
 	"image/color"
 	"math"
 	"runtime"
@@ -36,7 +37,6 @@ type Canvas struct {
 }
 
 func (c *Canvas) Prepare() {
-	//c.window.MakeContextCurrent()
 }
 
 func (c *Canvas) Set(x, y float64, color color.Color) {
@@ -48,6 +48,8 @@ func (c *Canvas) Flush() {
 }
 
 func (c *Canvas) Close() {
+	fmt.Println("Closing wde")
+	c.window.Close()
 	wde.Stop()
 }
 

@@ -95,3 +95,17 @@ func (b *Brush) Shape(sides int, stepLen float64, f func()) *Brush {
 func (b *Brush) Polygon(sides int, stepLen float64) *Brush {
 	return b.Shape(sides, stepLen, func() { /* Nothing */ })
 }
+
+/////
+
+func (b *Brush) Cont(i int, f func(int) int) {
+	for {
+		i = f(i)
+	}
+}
+
+func (b *Brush) Iter(i int, f func(int)) {
+	for index := 0; index < i; index++ {
+		f(index)
+	}
+}
