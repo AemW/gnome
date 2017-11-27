@@ -3,6 +3,7 @@ package painter
 import (
 	"image/color"
 	"math"
+	"sync"
 
 	"github.com/AemW/gnome/easel"
 	"github.com/AemW/gnome/process"
@@ -73,7 +74,7 @@ func (c *Collaboration) listen(s chan int) {
 
 		select {
 		case <-s:
-
+			c.StopPainting()
 		default:
 			for _, b := range c.chat {
 				select {
@@ -91,7 +92,10 @@ func (c *Collaboration) listen(s chan int) {
 
 // StopPainting signals all painters to stop painting.
 func (c *Collaboration) StopPainting() {
-	c.send1(func(w *Brush) { w.Stop() })
+	wg := sync.WaitGroup{}
+	wg.Add(len(c.chat))
+	c.send1(func(w *Brush) { w.Stop(); wg.Done() })
+	wg.Wait()
 	c.Stop()
 }
 

@@ -35,7 +35,7 @@ func (p *Proc) start(stop chan int, name interface{}, f func(chan int)) {
 // SpawnListener spwans a routine with a function which listens
 // to a channel.
 func (p *Proc) SpawnListener(name interface{}, f func(chan int)) {
-	c := make(chan int)
+	c := make(chan int, 1)
 	p.ps[p.i] = c
 	p.start(c, name, f)
 	fmt.Println("Starting process ", p.i, " named ", name)

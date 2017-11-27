@@ -1,6 +1,7 @@
 package easel
 
 import (
+	"log"
 	"sync"
 	"time"
 
@@ -19,14 +20,18 @@ func Draw(fr Frame, f func(*Easel)) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
+	e := makeEasel(fr)
+
 	// Spawn a routine that instantiates the main components and kicks-off
 	// the rendering somehow specefied by function f
 	go func() {
 		defer wg.Done()
-		e := makeEasel(fr)
 		f(&e)
+		log.Println("Finishing main loop")
+
+		log.Println("Cleaning easel")
 		e.finish()
-		//	log.Println("Finishing main loop")
+
 	}()
 
 	// Backend specific stuff, which needs to be done in the background
