@@ -1,7 +1,7 @@
 package process
 
 import (
-	"fmt"
+	"log"
 	"sync"
 )
 
@@ -18,17 +18,17 @@ func Make() Proc {
 	return Proc{sync.WaitGroup{}, make(map[int](chan int)), 0}
 }
 
-func (p *Proc) done() {
-	fmt.Println("defered WG done")
+func (p *Proc) done(stop chan int, name interface{}) {
+	log.Println("Stoping process: ", name)
+	close(stop)
 	p.wg.Done()
+	log.Println("defered WG done")
 }
 
 func (p *Proc) start(stop chan int, name interface{}, f func(chan int)) {
 	go func() {
-		defer p.done()
+		defer p.done(stop, name)
 		f(stop)
-		fmt.Println("Stoping process: ", name)
-		close(stop)
 	}()
 }
 
@@ -38,7 +38,7 @@ func (p *Proc) SpawnListener(name interface{}, f func(chan int)) {
 	c := make(chan int, 1)
 	p.ps[p.i] = c
 	p.start(c, name, f)
-	fmt.Println("Starting process ", p.i, " named ", name)
+	log.Println("Starting process ", p.i, " named ", name)
 	p.i++
 	p.wg.Add(1)
 }
@@ -77,6 +77,26 @@ func (p *Proc) Enumerate() {
 	fmt.Println("#Processes: ", p.i)
 	for i := range p.ps {
 		fmt.Println("Process_id ", i)
+	}
+}
+*/
+/*
+type V = interface{}
+type F = func(V)
+type S = chan V
+type P struct {
+	s S
+	f F
+}
+
+func Listen(def func(), ps ...P) {
+	for _, p := range ps {
+		select {
+		case v := <-p.s:
+			p.f(v)
+		default:
+			def()
+		}
 	}
 }
 */

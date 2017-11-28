@@ -12,6 +12,10 @@ import (
 	"github.com/AemW/gnome/easel/backend"
 )
 
+var (
+	BUFFER_SIZE int = 4
+)
+
 type Factory struct {
 	done chan bool
 }
@@ -49,6 +53,8 @@ func (c *Canvas) Prepare() {
 		panic(err)
 	}
 
+	//glfw.SwapInterval(10)
+
 	c.context = &glfwContext{
 		window:  win,
 		board:   makeBoard(c.x, c.y),
@@ -69,7 +75,7 @@ func (c *Canvas) Set(x, y float64, cl color.Color) {
 	xf := round(x)
 	yf := round(y)
 	if xf < c.x && xf >= 0 && yf < c.y && yf >= 0 {
-		c.context.clrd = c.context.board[xf][yf]
+		c.context.clrd = append(c.context.clrd, c.context.board[xf][yf])
 		c.context.board[xf][yf].c = cl
 		/*
 			p := c.context.board[xf][yf]
@@ -85,12 +91,14 @@ func (c *Canvas) Flush() {
 	// Not necessary to clear the screen since we want the previous
 	// traces to remain
 	//	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.UseProgram(c.context.program)
+	if len(c.context.clrd) >= BUFFER_SIZE {
+		gl.UseProgram(c.context.program)
 
-	c.context.Draw()
+		c.context.Draw()
 
-	glfw.PollEvents()
-	c.context.window.SwapBuffers()
+		glfw.PollEvents()
+		c.context.window.SwapBuffers()
+	}
 
 }
 
@@ -105,6 +113,12 @@ func (c *Canvas) StartEventhandler(done chan bool) {
 		switch char {
 		case '4':
 			done <- true
+		case '+':
+			BUFFER_SIZE++
+		case '-':
+			if BUFFER_SIZE > 1 {
+				BUFFER_SIZE--
+			}
 		}
 	})
 }

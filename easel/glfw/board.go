@@ -12,7 +12,7 @@ const PIXEL_COLOR = "pixelColor\x00"
 type glfwContext struct {
 	window  *glfw.Window
 	board   board
-	clrd    *pixel
+	clrd    []*pixel
 	program uint32
 }
 
@@ -51,15 +51,14 @@ func (c *glfwContext) Draw() {
 
 	uni := gl.GetUniformLocation(c.program, gl.Str(PIXEL_COLOR))
 
-	//for _, p := range c.clrd {
-	p := c.clrd
-	r, g, b, a := p.c.RGBA()
-	//fmt.Println(p.c.RGBA())
-	gl.Uniform4f(uni, norm(r), norm(g), norm(b), norm(a))
-	gl.BindVertexArray(p.img)
-	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(square)/3))
-
-	//}
+	for _, p := range c.clrd {
+		r, g, b, a := p.c.RGBA()
+		//fmt.Println(p.c.RGBA())
+		gl.Uniform4f(uni, norm(r), norm(g), norm(b), norm(a))
+		gl.BindVertexArray(p.img)
+		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(square)/3))
+	}
+	c.clrd = c.clrd[:0]
 }
 
 func norm(ui uint32) float32 {

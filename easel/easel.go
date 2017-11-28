@@ -77,6 +77,7 @@ func (e *Easel) prepareCanvas() chan bool {
 			time.Sleep(time.Millisecond * e.Frame.Delay)
 			e.cvs.Flush()
 		}
+		log.Println("Canvas closed")
 	}()
 
 	// Wait for the backend to finish preparing
@@ -95,4 +96,5 @@ func (e *Easel) finish() {
 	e.processes.Stop()
 	close(e.canvas)
 	e.cvs.Close()
+	log.Println("Easel finished")
 }

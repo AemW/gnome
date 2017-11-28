@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -13,21 +12,23 @@ import (
 
 func main() {
 
-	delay := flag.Int64("d", 10, "Screen flush delay (ms)")
+	delay := flag.Int64("d", 1, "Screen flush delay (ms)")
 	size := flag.Int("s", 500, "Screen size")
 	flag.Parse()
 
-	fmt.Println("The delay is: ", *delay)
+	log.Println("The delay is: ", *delay)
 	rand.Seed(time.Now().Unix())
-	//easel.SetEngine(easel.GLFW)
+	easel.SetEngine(easel.GLFW)
 	f := easel.NewFrame(*size, *size, "rtPaint", time.Duration(*delay))
 	easel.Draw(f, program)
+	log.Println("Exiting")
 
 }
 
 func program(e *easel.Easel) {
 
 	collab, manager := painter.MakeCollaboration()
+	//_, manager := painter.MakeCollaboration()
 
 	complete := e.PrepareEasel(manager)
 

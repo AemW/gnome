@@ -57,6 +57,18 @@ func (b *Brush) GetHelp(s Sketch) *Brush {
 	return b
 }
 
+//////
+
+func (b *Brush) Curve(length, radius float64) *Brush {
+	stepLen := (2 * math.Pi * radius) / float64(granularity)
+	angle := float64(360 / float64(granularity))
+	turn := func() {
+		b.Right(angle)
+		b.Line(stepLen)
+	}
+	return b.Repeat(int(length/stepLen), turn)
+}
+
 //////////////////////////////////// Shapes ////////////////////////////////////
 
 const granularity = 30

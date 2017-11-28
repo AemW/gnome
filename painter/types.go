@@ -3,6 +3,7 @@ package painter
 import (
 	"image/color"
 	"math"
+	"runtime"
 	"sync"
 
 	"github.com/AemW/gnome/easel"
@@ -71,10 +72,10 @@ func MakeCollaboration() (*Collaboration, easel.Painter) {
 
 func (c *Collaboration) listen(s chan int) {
 	for {
-
 		select {
 		case <-s:
 			c.StopPainting()
+			return
 		default:
 			for _, b := range c.chat {
 				select {
@@ -94,9 +95,9 @@ func (c *Collaboration) listen(s chan int) {
 func (c *Collaboration) StopPainting() {
 	wg := sync.WaitGroup{}
 	wg.Add(len(c.chat))
-	c.send1(func(w *Brush) { w.Stop(); wg.Done() })
+	c.send1(func(w *Brush) { w.Stop(); wg.Done(); runtime.Goexit() })
 	wg.Wait()
-	c.Stop()
+	//c.Stop()
 }
 
 func (c *Collaboration) send(f func()) {

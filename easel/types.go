@@ -40,6 +40,7 @@ type Frame struct {
 type Painter func(Canvas) func(chan int)
 
 //////////////////////////////// Backend engine ////////////////////////////////
+
 // Engine is an enum interface
 type Engine interface {
 	Engine() engine

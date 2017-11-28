@@ -3,12 +3,10 @@ package painter
 import "math"
 
 func (b *Brush) SpiralOut() {
-	b.Forever(func() {
-		b.curve(25)
-	}) /*
-		b.Iter(10, func(i int) {
-
-		})*/
+	b.Cont(10, func(i int) int {
+		b.Curve(0+float64(i), 0+float64(i))
+		return i + 2
+	})
 }
 func (b *Brush) nice() {
 	b.Cont(0, func(i int) int {
