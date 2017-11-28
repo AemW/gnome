@@ -103,8 +103,8 @@ func (c *Canvas) Flush() {
 }
 
 func (c *Canvas) Close() {
-	glfw.Terminate()
 	c.context.window.Destroy()
+	glfw.Terminate()
 }
 
 // StartEventhandler starts a listener for keyboard and mouse events.

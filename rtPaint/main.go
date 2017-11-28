@@ -18,6 +18,7 @@ func main() {
 
 	log.Println("The delay is: ", *delay)
 	rand.Seed(time.Now().Unix())
+
 	easel.SetEngine(easel.GLFW)
 	f := easel.NewFrame(*size, *size, "rtPaint", time.Duration(*delay))
 	easel.Draw(f, program)
@@ -35,7 +36,8 @@ func program(e *easel.Easel) {
 	sketch := func(b *painter.Brush) {
 		//w.TriTriangle(40)
 		//b.Random()
-		b.SpiralOut()
+		b.Weird()
+		//b.SpiralOut(10, 0, 0)
 		// nice without radian calc
 		//w.Walk(10).Right(90).Walk(10).Right(45).Walk(10)
 	}

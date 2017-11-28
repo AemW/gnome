@@ -1,13 +1,12 @@
 package painter
 
-import "math"
-
-func (b *Brush) SpiralOut() {
-	b.Cont(10, func(i int) int {
-		b.Curve(0+float64(i), 0+float64(i))
+func (b *Brush) SpiralOut(init, inc int, len, rad float64) {
+	b.Cont(init, func(i int) int {
+		b.Curve(len+float64(i), rad+float64(i))
 		return i + 2
 	})
 }
+
 func (b *Brush) nice() {
 	b.Cont(0, func(i int) int {
 		if i <= 0 {
@@ -18,13 +17,13 @@ func (b *Brush) nice() {
 	})
 }
 
-func (b *Brush) curve(radius float64) {
-	l := (2 * math.Pi * radius) / 20
-	angle := float64(360 / 20) // 180 - float64(((sides-2)*180)/sides)
-	turn := func() {
-		b.Line(l)
-		b.Right(angle)
-	}
-	b.Repeat(5, turn)
+func (b *Brush) Weird() {
+	b.Shape(15, 25, func() {
+		sketch := func(b *Brush) {
+			b.SpiralOut(15, 8, 2, 2)
+		}
+		b.GetHelp(sketch)
+	})
+	b.Stop()
 
 }

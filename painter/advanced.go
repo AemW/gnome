@@ -49,10 +49,12 @@ func (b *Brush) RandomColor() *Brush {
 // GetHelp tells the Team to send another Painter to help with drawing
 // the given function.
 func (b *Brush) GetHelp(s Sketch) *Brush {
-	b.holder <- func(v *Brush) {
-		v.a, v.x, v.y = b.a, b.x, b.y
-		v.c = b.c
-		s(v)
+	if b.moving {
+		b.holder <- func(v *Brush) {
+			v.a, v.x, v.y = b.a, b.x, b.y
+			v.c = b.c
+			s(v)
+		}
 	}
 	return b
 }
